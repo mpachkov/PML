@@ -68,7 +68,7 @@ img {
 <h1>Practical Machine Learning: Course Project</h1>
 <div id="summary" class="section level2">
 <h2>Summary</h2>
-<p>The report provides results of building prediction method for predicting the manner of physical activity detected by wearable gadgets.</p>
+<p>The report provides results of building prediction method for predicting the manner of physical activity detected by wearable gadgets. We have tried predicting with trees, with random forest and with boosting. The random forest approach demonstrated the best accuracy (0.99) and was used for predicting the manner of physical activity in the validation dataset.</p>
 </div>
 <div id="data-source" class="section level2">
 <h2>Data Source</h2>
@@ -125,7 +125,7 @@ myvalidate &lt;- myvalidate[, goodCols]</code></pre>
 </div>
 <div id="removing-near-zero-variables" class="section level2">
 <h2>Removing near-zero variables</h2>
-<p>With help of “nearZeroVar(mytrain, saveMetrics = TRUE)” (result not shown yo save space) we see that there is no near-zero variables left.</p>
+<p>With help of “nearZeroVar(mytrain, saveMetrics = TRUE)” (result not shown to save space) we see that there is no near-zero variables left.</p>
 </div>
 <div id="splitting-to-traintest-sets" class="section level2">
 <h2>Splitting to train/test sets</h2>
@@ -137,8 +137,8 @@ inTrain &lt;- createDataPartition(mytrain$classe, p=0.70, list=F)
 training &lt;- mytrain[inTrain,]
 testing &lt;- mytrain[-inTrain,]</code></pre>
 <ul>
-<li>Training set 13737, 53</li>
-<li>Testing set 5885, 53</li>
+<li>Training set size: 13737, 53</li>
+<li>Testing set size: 5885, 53</li>
 </ul>
 </div>
 <div id="predicting-with-trees" class="section level2">
@@ -173,7 +173,7 @@ modelFit1 &lt;- train(classe ~ ., data=training, method=&quot;rpart&quot;, trCon
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was cp = 0.02604008.</code></pre>
-<p>Accuracy is 0.5490259 which does not look promising.</p>
+<p>Accuracy is 0.561 which does not look promising.</p>
 <pre class="r"><code>pred &lt;- predict(modelFit1, testing)
 confusionMatrix(testing$classe, pred)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
@@ -208,7 +208,7 @@ confusionMatrix(testing$classe, pred)</code></pre>
 ## Detection Prevalence   0.2845   0.1935   0.1743  0.16381  0.18386
 ## Balanced Accuracy      0.8106   0.6976   0.6631  0.64784  0.93715</code></pre>
 <ul>
-<li>in-sample error 1 - accuracy = 0.45</li>
+<li>in-sample error 1 - accuracy = 0.439</li>
 <li>out-of-sample error 0.4477485</li>
 </ul>
 </div>
@@ -271,9 +271,10 @@ confusionMatrix(testing$classe, pred)</code></pre>
 ## Detection Prevalence   0.2845   0.1935   0.1743   0.1638   0.1839
 ## Balanced Accuracy      0.9975   0.9925   0.9882   0.9968   0.9995</code></pre>
 <ul>
-<li>in-sample error 1 - accuracy = 0.45</li>
+<li>in-sample error 1 - accuracy = 0.009</li>
 <li>out-of-sample error 0.0079864</li>
 </ul>
+<p>That is very good result that out-of-sample is amost the same as in-sample error taking in account the confidential interval.</p>
 <div id="boosting" class="section level3">
 <h3>Boosting</h3>
 <pre class="r"><code>modelFit3 &lt;- train(classe ~ ., data=training, method=&quot;gbm&quot;, trControl=fitControl)</code></pre>
@@ -381,14 +382,15 @@ confusionMatrix(testing$classe, pred)</code></pre>
 ## Detection Prevalence   0.2845   0.1935   0.1743   0.1638   0.1839
 ## Balanced Accuracy      0.9804   0.9646   0.9554   0.9746   0.9911</code></pre>
 <ul>
-<li>in-sample error 1 - accuracy = 0.45</li>
+<li>in-sample error 1 - accuracy = 0.039</li>
 <li>out-of-sample error 0.042141</li>
 </ul>
+<p>While boosting produce result worse then random forest model the difefrence is relatively small.</p>
 </div>
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
-<p>Random forest method demonstrated the best accuracy. so we use this method to predict test set provided by coursera</p>
+<p>Random forest method demonstrated the best accuracy. So we use this method to predict test set provided by coursera</p>
 </div>
 <div id="preparing-data-for-submission" class="section level2">
 <h2>Preparing data for submission</h2>

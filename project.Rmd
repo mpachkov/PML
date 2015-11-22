@@ -7,7 +7,7 @@ output: html_document
 
 ## Summary
 
-The report provides results of building prediction method for predicting the manner of physical activity detected by wearable gadgets.
+The report provides results of building prediction method for predicting the manner of physical activity detected by wearable gadgets. We have tried predicting with trees, with random forest and with boosting. The random forest approach demonstrated the best accuracy (0.99) and was used for predicting the manner of physical activity in the validation dataset.
 
 ## Data Source
 
@@ -88,8 +88,8 @@ inTrain <- createDataPartition(mytrain$classe, p=0.70, list=F)
 training <- mytrain[inTrain,]
 testing <- mytrain[-inTrain,]
 ```
-- Training set `r dim(training)`
-- Testing set `r dim(testing)`
+- Training set size: `r dim(training)`
+- Testing set size: `r dim(testing)`
 
 ## Predicting with trees
 
@@ -104,14 +104,14 @@ modelFit1 <- train(classe ~ ., data=training, method="rpart", trControl=fitContr
 modelFit1
 ```
 
-Accuracy is 0.5490259 which does not look promising.  
+Accuracy is 0.561 which does not look promising.  
 
 ```{r, cache=TRUE}
 pred <- predict(modelFit1, testing)
 confusionMatrix(testing$classe, pred)
 ```
 
-- in-sample error 1 - accuracy = 0.45
+- in-sample error 1 - accuracy = 0.439
 - out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
 
 ## Random forest prediction
@@ -125,8 +125,10 @@ pred <- predict(modelFit2, testing)
 confusionMatrix(testing$classe, pred)
 ```
 
-- in-sample error 1 - accuracy = 0.45
+- in-sample error 1 - accuracy = 0.009
 - out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
+
+That is very good result that out-of-sample is amost the same as in-sample error taking in account the confidential interval.
 
 ### Boosting
 
@@ -140,12 +142,14 @@ pred <- predict(modelFit3, testing)
 confusionMatrix(testing$classe, pred)
 ```
 
-- in-sample error 1 - accuracy = 0.45
+- in-sample error 1 - accuracy = 0.039
 - out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
+
+While boosting produce result worse then random forest model the difefrence is relatively small.
 
 ## Results
 
-Random forest method demonstrated the best accuracy. so we use this method to predict test set provided by coursera
+Random forest method demonstrated the best accuracy. So we use this method to predict test set provided by coursera
 
 ## Preparing data for submission
 
