@@ -1,0 +1,170 @@
+---
+title: 'PML: Course Project'
+output: html_document
+---
+
+# Practical Machine Learning: Course Project
+
+## Summary
+
+The report provides results of building prediction method for predicting the manner of physical activity detected by wearable gadgets. We have tried predicting with trees, with random forest and with boosting. The random forest approach demonstrated the best accuracy (0.99) and was used for predicting the manner of physical activity in the validation dataset. 
+
+All models were built utilizing the cross-validation technique. For every model there is estimation of in-sample and out-of-sample error.
+
+## Data Source
+
+The data for this project come from the Human Activity Recognition (HAR) project: http://groupware.les.inf.puc-rio.br/har. 
+
+The training data url: 
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data url: 
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+```{r}
+## Download data
+if (!file.exists("pml-training.csv")) {
+  url <- 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv'
+  download.file(url, "pml-training.csv")
+}
+if (!file.exists("pml-testing.csv")) {
+  url <- 'https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv'
+  download.file(url, "pml-testing.csv")
+}
+```
+
+## Data Properties
+
+```{r, cache=TRUE}
+## read data
+train <- read.csv("pml-training.csv")
+validate <- read.csv("pml-testing.csv")
+```
+
+- Training dataset contains `r dim(train)[1]` observations.
+- Validation dataset contains `r dim(validate)[1]` observations.
+- There are `r dim(train)[2]` variables.
+
+## Cleaning the dataset
+
+### Removing variables unrelated to movement class prediction
+Dataset contains obvious variables which could be removed since they contain information unrelated to the movement class. These are: X, user_name, raw_timestamp_part_1, raw_timestamp_part_2,  new_window , num_window.
+```{r, cache=TRUE}
+mytrain <- train[, -(1:7)]
+myvalidate <- validate[, -(1:7)]
+```
+
+### Removing variables with too much NA values
+Executing code bellow we can found that there is only two categories of variables with a lot of NA values and with no NA values. All variables with majority of values being NA are excuded.
+
+```{r, cache=TRUE}
+## classes of NA frequency in the columns
+unique(colSums(is.na(mytrain))/dim(mytrain)[1])
+```
+
+```{r, cache=TRUE}
+## removing non-informative variables
+goodCols <- colSums(is.na(mytrain)/dim(mytrain)) == 0
+mytrain <- mytrain[, goodCols]
+myvalidate <- myvalidate[, goodCols]
+```
+
+## Removing variables with empty strings
+There is also some variables containing empty strings, "#DIV/0!" and other not numerical values. These are easy to see using "summary" command. Since most of values in these variables are "" we remove these variables.
+
+```{r, cache=TRUE}
+goodCols <- colSums(mytrain == "") == 0
+mytrain <- mytrain[, goodCols]
+myvalidate <- myvalidate[, goodCols]
+```
+
+## Removing near-zero variables
+
+With help of "nearZeroVar(mytrain, saveMetrics = TRUE)" (result not shown to save space) we see that there is no near-zero variables left.
+
+## Splitting to train/test sets
+```{r, cache=TRUE}
+library(caret)
+set.seed(123)
+inTrain <- createDataPartition(mytrain$classe, p=0.70, list=F)
+training <- mytrain[inTrain,]
+testing <- mytrain[-inTrain,]
+```
+- Training set size: `r dim(training)`
+- Testing set size: `r dim(testing)`
+
+## Predicting with trees
+
+```{r, cache=TRUE}
+## lets use all the power we have
+library(doMC)
+registerDoMC(cores = 2)
+## do cross-validation
+## useful link http://topepo.github.io/caret/training.html
+fitControl <- trainControl(method="cv", 5)
+modelFit1 <- train(classe ~ ., data=training, method="rpart", trControl=fitControl)
+modelFit1
+```
+
+Accuracy is 0.561 which does not look promising.  
+
+```{r, cache=TRUE}
+pred <- predict(modelFit1, testing)
+confusionMatrix(testing$classe, pred)
+```
+
+- in-sample error 1 - accuracy = 0.439
+- out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
+
+## Random forest prediction
+```{r, cache=TRUE}
+modelFit2 <- train(classe ~ ., data=training, method="rf", trControl=fitControl)
+modelFit2
+```
+
+```{r, cache=TRUE}
+pred <- predict(modelFit2, testing)
+confusionMatrix(testing$classe, pred)
+```
+
+- in-sample error 1 - accuracy = 0.009
+- out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
+
+That is very good result that out-of-sample is amost the same as in-sample error taking in account the confidential interval.
+
+### Boosting
+
+```{r, cache=TRUE}
+modelFit3 <- train(classe ~ ., data=training, method="gbm", trControl=fitControl)
+modelFit3
+```
+
+```{r, cache=TRUE}
+pred <- predict(modelFit3, testing)
+confusionMatrix(testing$classe, pred)
+```
+
+- in-sample error 1 - accuracy = 0.039
+- out-of-sample error `r 1 - sum(testing$classe == pred)/length(pred)`
+
+While boosting produce result worse then random forest model the difefrence is relatively small.
+
+## Results
+
+Random forest method demonstrated the best accuracy. So we use this method to predict test set provided by coursera
+
+## Preparing data for submission
+
+```{r, cache=TRUE}
+pred <- predict(modelFit2, newdata = myvalidate[,-53])
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(pred)
+```
